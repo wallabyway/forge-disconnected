@@ -174,24 +174,33 @@ async function messageAsync(event) {
     }
 }
 
+function relPathToAbs (sRelPath) {
+    var nUpLn, sDir = "", sPath = location.pathname.replace(/[^\/]*$/, sRelPath.replace(/(\/|^)(?:\.?\/+)+/g, "$1"));
+    for (var nEnd, nStart = 0; nEnd = sPath.indexOf("/../", nStart), nEnd > -1; nStart = nEnd + nUpLn) {
+      nUpLn = /^\/(?:\.\.\/)*/.exec(sPath.slice(nEnd))[0].length;
+      sDir = (sDir + sPath.substring(nStart, nEnd)).replace(new RegExp("(?:\\\/+[^\\\/]*){0," + ((nUpLn - 1) / 3) + "}$"), "/");
+    }
+    return sDir + sPath.substr(nStart);
+}
+
 async function cacheUrn(urn, access_token) {
     console.log('Caching', urn);
     // First, ask our server for all derivatives in this URN, and their file URLs
-    const baseUrl = 'https://developer.api.autodesk.com/derivativeservice/v2';
+    const baseUrl = 'https://otg.autodesk.com';
     const res = await fetch(`/api/models/${urn}/files`);
     const derivatives = await res.json();
     // Prepare fetch requests to cache all the URLs
     const cache = await caches.open(CACHE_NAME);
-    const options = { headers: { 'Authorization': 'Bearer ' + access_token } };
+    const options = { mode: "cors",  headers: { 'Authorization': 'Bearer ' + access_token } };
     const fetches = [];
     const manifestUrl = `${baseUrl}/manifest/${urn}`;
     fetches.push(fetch(manifestUrl, options).then(resp => cache.put(manifestUrl, resp)).then(() => manifestUrl));
     for (const derivative of derivatives) {
-        const derivUrl = baseUrl + '/derivatives/' + encodeURIComponent(derivative.urn);
+        const derivUrl = baseUrl + '/modeldata/file/' + encodeURIComponent(derivative.urn);
         fetches.push(fetch(derivUrl, options).then(resp => cache.put(derivUrl, resp)).then(() => derivUrl));
         for (const file of derivative.files) {
-            const fileUrl = baseUrl + '/derivatives/' + encodeURIComponent(derivative.basePath + file);
-            fetches.push(fetch(fileUrl, options).then(resp => cache.put(fileUrl, resp)).then(() => fileUrl));
+            const fileUrl = baseUrl + '/modeldata/file/' + encodeURIComponent(relPathToAbs(derivative.basePath + file) ).slice(3);
+            fetches.push(fetch(`${fileUrl}?acmsession=${urn}`, options).then(resp => cache.put(fileUrl, resp)).then(() => fileUrl));
         }
     }
     // Fetch and cache all URLs in parallel

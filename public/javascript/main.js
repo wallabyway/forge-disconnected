@@ -6,7 +6,8 @@ let currentUrn = null; // Currently open URN
 let accessToken = null; // Access token used by the viewer
 
 const options = {
-	env: 'AutodeskProduction',
+	env: 'FluentProduction',
+    api: 'fluent',
 	getAccessToken: function(callback) {
 		fetch(AccessTokenEndpoint)
 		    .then((response) => response.json())

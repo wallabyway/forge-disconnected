@@ -4,7 +4,8 @@ const zlib = require('zlib');
 const express = require('express');
 
 const { AuthenticationClient, DataManagementClient } = require('autodesk-forge-tools');
-const BaseUrl = 'https://developer.api.autodesk.com';
+//const BaseUrl = 'https://developer.api.autodesk.com';
+const BaseUrl = 'https://otg.autodesk.com';
 const Scopes = ['viewables:read', 'data:read'];
 
 let router = express.Router();
@@ -27,34 +28,21 @@ router.get('/api/models', async function(req, res, next) {
     }
 });
 
+
+
 // GET /api/models/:urn/files
 // Returns a JSON list of all derivatives for a given model URN
 // and a list of files each derivative depends on.
 router.get('/api/models/:urn/files', async function(req, res, next) {
     try {
-        const authentication = await auth.authenticate(Scopes);
-        const manifest = await getManifest(req.params.urn, authentication.access_token);
-        const items = parseManifest(manifest);
-        const derivatives = items.map(async (item) => {
-            let files = [];
-            switch (item.mime) {
-                case 'application/autodesk-svf':
-                    files = await getDerivativesSVF(item.urn, authentication.access_token);
-                    break;
-                case 'application/autodesk-f2d':
-                    files = await getDerivativesF2D(item, authentication.access_token);
-                    break;
-                case 'application/autodesk-db':
-                    files = ['objects_attrs.json.gz', 'objects_vals.json.gz', 'objects_offs.json.gz', 'objects_ids.json.gz', 'objects_avs.json.gz', item.rootFileName];
-                    break;
-                default:
-                    files = [item.rootFileName];
-                    break;
-            }
-            return Object.assign({}, item, { files });
-        });
-        const urls = await Promise.all(derivatives);
+        //const authentication = await auth.authenticate(Scopes);
+        //const manifest = await getManifest(req.params.urn, authentication.access_token);
+        const urls = [{
+            basePath:`urn:adsk.fluent:fs.file:tcollmo-p-ue1-viewables/vrparty1/Enscape%20Modern%20Residence.rvt/0/output/Resource/3D_View/_3D_ 501463/`,
+            files:["fragments.fl", "fragments_extra.fl", "materials_ptrs.hl", "geometry_ptrs.hl",  "../../avs.pack", "../../avs.idx", "../../dbid.idx"],
+        }];
         res.json(urls);
+
     } catch (err) {
         next(err);
     }
@@ -113,7 +101,8 @@ function getPathInfo(encodedURN) {
 }
 
 async function getDerivative(urn, token) {
-    const res = await fetch(BaseUrl + `/derivativeservice/v2/derivatives/${urn}`, {
+        const res = await fetch(BaseUrl + `/modeldata/file/${urn}`, {
+        //const res = await fetch(BaseUrl + `/derivativeservice/v2/derivatives/${urn}`, {
         compress: true,
         headers: { 'Authorization': 'Bearer ' + token }
     });
