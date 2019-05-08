@@ -37,9 +37,11 @@ router.get('/api/models/:urn/files', async function(req, res, next) {
     try {
         //const authentication = await auth.authenticate(Scopes);
         //const manifest = await getManifest(req.params.urn, authentication.access_token);
+        // https://otg.autodesk.com/modeldata/manifest/dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dnJwYXJ0eTEvRW5zY2FwZSUyME1vZGVybiUyMFJlc2lkZW5jZS5ydnQ?domain=http%3A%2F%2Flocalhost%3A8080
         const urls = [{
+            urn: `dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6dnJwYXJ0eTEvRW5zY2FwZSUyME1vZGVybiUyMFJlc2lkZW5jZS5ydnQ`,
             basePath:`urn:adsk.fluent:fs.file:tcollmo-p-ue1-viewables/vrparty1/Enscape%20Modern%20Residence.rvt/0/output/Resource/3D_View/_3D_ 501463/`,
-            files:["fragments.fl", "fragments_extra.fl", "materials_ptrs.hl", "geometry_ptrs.hl",  "../../avs.pack", "../../avs.idx", "../../dbid.idx"],
+            files:["otg_model.json", "fragments.fl", "fragments_extra.fl", "materials_ptrs.hl", "geometry_ptrs.hl",  "../../avs.pack", "../../avs.idx", "../../dbid.idx"],
         }];
         res.json(urls);
 

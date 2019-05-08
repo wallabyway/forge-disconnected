@@ -193,13 +193,11 @@ async function cacheUrn(urn, access_token) {
     const cache = await caches.open(CACHE_NAME);
     const options = { mode: "cors",  headers: { 'Authorization': 'Bearer ' + access_token } };
     const fetches = [];
-    const manifestUrl = `${baseUrl}/manifest/${urn}`;
-    fetches.push(fetch(manifestUrl, options).then(resp => cache.put(manifestUrl, resp)).then(() => manifestUrl));
     for (const derivative of derivatives) {
-        const derivUrl = baseUrl + '/modeldata/file/' + encodeURIComponent(derivative.urn);
+        const derivUrl = baseUrl + '/modeldata/manifest/' + encodeURIComponent(derivative.urn) + "?domain=http%3A%2F%2Flocalhost%3A8080";
         fetches.push(fetch(derivUrl, options).then(resp => cache.put(derivUrl, resp)).then(() => derivUrl));
         for (const file of derivative.files) {
-            const fileUrl = baseUrl + '/modeldata/file/' + encodeURIComponent(relPathToAbs(derivative.basePath + file) ).slice(3);
+            const fileUrl = baseUrl + '/modeldata/file/' + encodeURIComponent(relPathToAbs(derivative.basePath + file) ).slice(3);// + (file=="otg_model.json") ? "?domain=http%3A%2F%2Flocalhost%3A8080" : "";
             fetches.push(fetch(`${fileUrl}?acmsession=${urn}`, options).then(resp => cache.put(fileUrl, resp)).then(() => fileUrl));
         }
     }
